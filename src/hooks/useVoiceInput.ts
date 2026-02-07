@@ -48,17 +48,26 @@ export function useVoiceInput(): UseVoiceInputReturn {
       const result = event.results[0];
       if (result.isFinal) {
         const transcriptText = result[0].transcript;
-        console.log('🎤 音声認識結果:', {
+        console.log('🎤 音声認識結果 (変換前):', {
           original: transcriptText,
           confidence: result[0].confidence,
           language: recognition.lang,
         });
 
-        // Convert katakana to hiragana (synchronous, lightweight)
-        const hiraganaText = convertToHiragana(transcriptText);
-
-        setTranscript(hiraganaText);
+        // First show the original text immediately (no blocking)
+        setTranscript(transcriptText);
         setError(null);
+
+        // Then convert kanji to hiragana in the background
+        convertToHiragana(transcriptText)
+          .then((hiraganaText) => {
+            console.log('✅ ひらがな変換完了:', hiraganaText);
+            setTranscript(hiraganaText);
+          })
+          .catch((err) => {
+            console.error('❌ 変換失敗:', err);
+            // Keep original text if conversion fails
+          });
       }
     };
 
