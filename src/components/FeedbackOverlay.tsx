@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { KanjiEntry } from "@/lib/types";
+import { normalizeReading } from "@/lib/hiragana";
 
 interface FeedbackOverlayProps {
   isCorrect: boolean;
@@ -54,16 +55,28 @@ export default function FeedbackOverlay({
                 こたえを見る
               </button>
             ) : (
-              <div className="animate-fade-in space-y-1">
-                <p className="text-gray-500 text-sm">
-                  あなたの答え：<span className="text-red-600 font-bold">{userAnswer}</span>
-                </p>
-                <p className="text-gray-700 text-lg">
-                  こたえ：
-                  <span className="text-green-700 font-bold">
+              <div className="animate-fade-in space-y-2">
+                <div>
+                  <p className="text-gray-500 text-sm">あなたの答え：</p>
+                  <p className="text-red-600 font-bold text-lg">{userAnswer}</p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    (正規化: {normalizeReading(userAnswer)})
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-700 text-sm">こたえ：</p>
+                  <p className="text-green-700 font-bold text-lg">
                     {entry.readings[0]}
-                  </span>
-                </p>
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    (正規化: {normalizeReading(entry.readings[0])})
+                  </p>
+                </div>
+                {entry.readings.length > 1 && (
+                  <p className="text-gray-500 text-xs">
+                    他の読み: {entry.readings.slice(1).join(", ")}
+                  </p>
+                )}
               </div>
             )}
           </div>

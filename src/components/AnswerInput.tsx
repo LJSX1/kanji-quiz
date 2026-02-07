@@ -42,11 +42,15 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
     }
   }, [inputMode]);
 
-  // Auto-submit when voice transcript is ready
+  // Auto-submit when voice transcript is ready (with a small delay to show the transcript)
   useEffect(() => {
     if (transcript && inputMode === "voice" && !disabled) {
-      onSubmit(transcript);
-      resetTranscript();
+      // Show the transcript for 1 second before submitting
+      const timer = setTimeout(() => {
+        onSubmit(transcript);
+        resetTranscript();
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [transcript, inputMode, disabled, onSubmit, resetTranscript]);
 
@@ -91,6 +95,14 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
       {voiceError && inputMode === "voice" && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
           {voiceError}
+        </div>
+      )}
+
+      {/* Voice transcript display */}
+      {transcript && inputMode === "voice" && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg animate-fade-in">
+          <div className="text-sm text-blue-600 mb-1">認識された言葉：</div>
+          <div className="text-2xl font-bold">{transcript}</div>
         </div>
       )}
 

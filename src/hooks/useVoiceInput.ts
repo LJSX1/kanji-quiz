@@ -47,6 +47,11 @@ export function useVoiceInput(): UseVoiceInputReturn {
       const result = event.results[0];
       if (result.isFinal) {
         const transcriptText = result[0].transcript;
+        console.log('🎤 音声認識結果:', {
+          original: transcriptText,
+          confidence: result[0].confidence,
+          language: recognition.lang,
+        });
         setTranscript(transcriptText);
         setError(null);
       }
@@ -96,9 +101,15 @@ export function useVoiceInput(): UseVoiceInputReturn {
     setTranscript("");
 
     try {
+      console.log('🎤 音声認識開始:', {
+        language: recognitionRef.current.lang,
+        continuous: recognitionRef.current.continuous,
+        interimResults: recognitionRef.current.interimResults,
+      });
       recognitionRef.current.start();
       setIsListening(true);
     } catch (err) {
+      console.error('音声認識エラー:', err);
       setError("音声認識を開始できませんでした");
       setIsListening(false);
     }
