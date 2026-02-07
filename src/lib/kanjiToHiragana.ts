@@ -15,7 +15,10 @@ export async function initKuroshiro(): Promise<void> {
   try {
     console.log("🔧 Kuroshiro初期化中...");
     kuroshiroInstance = new Kuroshiro();
-    await kuroshiroInstance.init(new KuromojiAnalyzer());
+    // Configure kuromoji to use dictionary files from public folder
+    await kuroshiroInstance.init(
+      new KuromojiAnalyzer({ dictPath: "/dict" })
+    );
     isInitialized = true;
     console.log("✅ Kuroshiro初期化完了");
   } catch (error) {
