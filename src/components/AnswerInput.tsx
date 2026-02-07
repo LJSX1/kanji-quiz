@@ -26,6 +26,16 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
     resetTranscript,
   } = useVoiceInput();
 
+  // Debug: Log component mount and state
+  useEffect(() => {
+    console.log('🔵 [DEBUG] AnswerInput mounted', {
+      disabled,
+      isVoiceSupported,
+      isListening,
+      transcript,
+    });
+  }, []);
+
   // Input mode state with localStorage persistence
   const [inputMode, setInputMode] = useState<InputMode>(() => {
     if (typeof window !== "undefined") {
@@ -63,13 +73,26 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
   );
 
   const handleVoiceClick = useCallback(() => {
-    if (disabled) return;
+    console.log('🔵 [DEBUG] handleVoiceClick called', {
+      disabled,
+      isListening,
+      isVoiceSupported,
+      transcript,
+    });
+
+    if (disabled) {
+      console.log('🔴 [DEBUG] Blocked: disabled is true');
+      return;
+    }
+
     if (isListening) {
+      console.log('🟡 [DEBUG] Stopping listening...');
       stopListening();
     } else {
+      console.log('🟢 [DEBUG] Starting listening...');
       startListening();
     }
-  }, [disabled, isListening, startListening, stopListening]);
+  }, [disabled, isListening, isVoiceSupported, startListening, stopListening, transcript]);
 
   const handleModeToggle = useCallback(() => {
     if (isListening) {

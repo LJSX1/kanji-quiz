@@ -47,15 +47,24 @@ export function useVoiceInput(): UseVoiceInputReturn {
   }, [isSupported]);
 
   useEffect(() => {
-    if (!isSupported) return;
+    console.log('🔵 [DEBUG] useVoiceInput useEffect running', { isSupported });
+
+    if (!isSupported) {
+      console.log('🔴 [DEBUG] Speech recognition not supported');
+      return;
+    }
 
     // Initialize SpeechRecognition
     const SpeechRecognitionAPI =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
 
-    if (!SpeechRecognitionAPI) return;
+    if (!SpeechRecognitionAPI) {
+      console.error('🔴 [DEBUG] SpeechRecognitionAPI not found');
+      return;
+    }
 
+    console.log('✅ [DEBUG] Creating SpeechRecognition instance');
     const recognition = new SpeechRecognitionAPI();
     recognition.lang = "ja-JP";
     recognition.continuous = false;
@@ -64,10 +73,11 @@ export function useVoiceInput(): UseVoiceInputReturn {
 
     // Handle speech recognition result
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      console.log('🔵 [DEBUG] onresult fired', event);
       const result = event.results[0];
       if (result.isFinal) {
         const transcriptText = result[0].transcript;
-        console.log('🎤 音声認識結果 (変換前):', {
+        console.log('🎤 [DEBUG] 音声認識結果 (変換前):', {
           original: transcriptText,
           confidence: result[0].confidence,
           language: recognition.lang,
@@ -76,18 +86,34 @@ export function useVoiceInput(): UseVoiceInputReturn {
         // First show the original text immediately (no blocking)
         setTranscript(transcriptText);
         setError(null);
+        console.log('✅ [DEBUG] Transcript set:', transcriptText);
 
         // Then convert kanji to hiragana in the background
         convertToHiragana(transcriptText)
           .then((hiraganaText) => {
-            console.log('✅ ひらがな変換完了:', hiraganaText);
+            console.log('✅ [DEBUG] ひらがな変換完了:', hiraganaText);
             setTranscript(hiraganaText);
           })
           .catch((err) => {
-            console.error('❌ 変換失敗:', err);
+            console.error('❌ [DEBUG] 変換失敗:', err);
             // Keep original text if conversion fails
           });
       }
+    };
+
+    // Add onstart handler for debugging
+    recognition.onstart = () => {
+      console.log('✅ [DEBUG] Recognition started successfully');
+    };
+
+    // Add onaudiostart handler
+    recognition.onaudiostart = () => {
+      console.log('🎙️ [DEBUG] Audio capture started');
+    };
+
+    // Add onspeechstart handler
+    recognition.onspeechstart = () => {
+      console.log('🗣️ [DEBUG] Speech detected');
     };
 
     // Handle errors
@@ -119,8 +145,12 @@ export function useVoiceInput(): UseVoiceInputReturn {
     };
 
     recognitionRef.current = recognition;
+    console.log('✅ [DEBUG] Recognition stored in ref', {
+      hasRecognition: !!recognitionRef.current,
+    });
 
     return () => {
+      console.log('🔵 [DEBUG] useVoiceInput cleanup');
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
@@ -128,25 +158,41 @@ export function useVoiceInput(): UseVoiceInputReturn {
   }, [isSupported]);
 
   const startListening = useCallback(() => {
-    if (!recognitionRef.current || isListening) return;
+    console.log('🔵 [DEBUG] startListening called', {
+      hasRecognition: !!recognitionRef.current,
+      isListening,
+      isSupported,
+    });
+
+    if (!recognitionRef.current) {
+      console.error('🔴 [DEBUG] recognitionRef.current is null!');
+      setError("音声認識が初期化されていません");
+      return;
+    }
+
+    if (isListening) {
+      console.log('🟡 [DEBUG] Already listening, returning');
+      return;
+    }
 
     setError(null);
     setTranscript("");
 
     try {
-      console.log('🎤 音声認識開始:', {
+      console.log('🎤 [DEBUG] 音声認識開始:', {
         language: recognitionRef.current.lang,
         continuous: recognitionRef.current.continuous,
         interimResults: recognitionRef.current.interimResults,
       });
       recognitionRef.current.start();
+      console.log('✅ [DEBUG] recognition.start() called successfully');
       setIsListening(true);
     } catch (err) {
-      console.error('音声認識エラー:', err);
-      setError("音声認識を開始できませんでした");
+      console.error('🔴 [DEBUG] 音声認識エラー:', err);
+      setError("音声認識を開始できませんでした: " + (err as Error).message);
       setIsListening(false);
     }
-  }, [isListening]);
+  }, [isListening, isSupported]);
 
   const stopListening = useCallback(() => {
     if (!recognitionRef.current || !isListening) return;
