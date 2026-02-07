@@ -42,17 +42,8 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
     }
   }, [inputMode]);
 
-  // Auto-submit when voice transcript is ready (with a small delay to show the transcript)
-  useEffect(() => {
-    if (transcript && inputMode === "voice" && !disabled) {
-      // Show the transcript for 1 second before submitting
-      const timer = setTimeout(() => {
-        onSubmit(transcript);
-        resetTranscript();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [transcript, inputMode, disabled, onSubmit, resetTranscript]);
+  // Don't auto-submit voice input anymore - let user confirm first
+  // (removed auto-submit to prevent freezing and allow user to verify)
 
   // Stop listening when disabled
   useEffect(() => {
@@ -89,6 +80,13 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
     resetTranscript();
   }, [isListening, stopListening, resetTranscript]);
 
+  const handleVoiceSubmit = useCallback(() => {
+    if (transcript && !disabled) {
+      onSubmit(transcript);
+      resetTranscript();
+    }
+  }, [transcript, disabled, onSubmit, resetTranscript]);
+
   return (
     <div className="mt-6 space-y-2">
       {/* Voice error display */}
@@ -101,7 +99,15 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
       {/* Voice transcript display */}
       {transcript && inputMode === "voice" && (
         <div className="bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg animate-fade-in">
-          <div className="text-sm text-blue-600 mb-1">認識された言葉：</div>
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-sm text-blue-600">認識された言葉：</div>
+            <button
+              onClick={() => resetTranscript()}
+              className="text-xs text-blue-600 hover:text-blue-800 underline"
+            >
+              もう一度
+            </button>
+          </div>
           <div className="text-2xl font-bold">{transcript}</div>
         </div>
       )}
@@ -131,10 +137,12 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
           <button
             type="button"
             onClick={handleVoiceClick}
-            disabled={disabled}
+            disabled={disabled || transcript !== ""}
             className={`flex-1 text-xl px-4 py-3 border-2 rounded-xl font-bold transition-all ${
               isListening
                 ? "bg-red-500 text-white border-red-600 animate-pulse"
+                : transcript
+                ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed"
                 : "bg-white text-gray-800 border-amber-300 hover:border-amber-500"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
@@ -146,6 +154,10 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
                 </span>
                 聞いています...
               </span>
+            ) : transcript ? (
+              <span className="flex items-center justify-center gap-2">
+                認識完了 ✓
+              </span>
             ) : (
               <span className="flex items-center justify-center gap-2">
                 🎤 タップして話す
@@ -154,8 +166,8 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
           </button>
         )}
 
-        {/* Mode toggle button (only show if voice is supported) */}
-        {isVoiceSupported && (
+        {/* Mode toggle button (only show if voice is supported and not listening) */}
+        {isVoiceSupported && !isListening && (
           <button
             type="button"
             onClick={handleModeToggle}
@@ -167,8 +179,8 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
           </button>
         )}
 
-        {/* Submit button (only for text mode) */}
-        {inputMode === "text" && (
+        {/* Submit button */}
+        {inputMode === "text" ? (
           <button
             type="submit"
             disabled={disabled || !value.trim()}
@@ -176,6 +188,17 @@ export default function AnswerInput({ onSubmit, disabled }: AnswerInputProps) {
           >
             こたえる
           </button>
+        ) : (
+          transcript && (
+            <button
+              type="button"
+              onClick={handleVoiceSubmit}
+              disabled={disabled}
+              className="bg-amber-500 text-white font-bold text-lg px-6 py-3 rounded-xl hover:bg-amber-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              こたえる
+            </button>
+          )
         )}
       </form>
     </div>

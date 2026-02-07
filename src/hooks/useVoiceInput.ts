@@ -44,19 +44,18 @@ export function useVoiceInput(): UseVoiceInputReturn {
     recognition.maxAlternatives = 1;
 
     // Handle speech recognition result
-    recognition.onresult = async (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const result = event.results[0];
       if (result.isFinal) {
         const transcriptText = result[0].transcript;
-        console.log('🎤 音声認識結果 (変換前):', {
+        console.log('🎤 音声認識結果:', {
           original: transcriptText,
           confidence: result[0].confidence,
           language: recognition.lang,
         });
 
-        // Convert kanji to hiragana
-        const hiraganaText = await convertToHiragana(transcriptText);
-        console.log('✅ ひらがな変換後:', hiraganaText);
+        // Convert katakana to hiragana (synchronous, lightweight)
+        const hiraganaText = convertToHiragana(transcriptText);
 
         setTranscript(hiraganaText);
         setError(null);

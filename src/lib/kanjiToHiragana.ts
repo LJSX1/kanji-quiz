@@ -1,50 +1,13 @@
-import Kuroshiro from "kuroshiro";
-import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
-
-let kuroshiroInstance: Kuroshiro | null = null;
-let initPromise: Promise<void> | null = null;
+import { toHiragana } from "wanakana";
 
 /**
- * Initialize Kuroshiro instance (call this once)
+ * Convert katakana to hiragana (lightweight, synchronous)
+ * Note: This does not convert kanji. For kanji conversion, the speech
+ * recognition result is shown to the user before submission.
  */
-async function initKuroshiro(): Promise<void> {
-  if (kuroshiroInstance) return;
-
-  if (initPromise) {
-    await initPromise;
-    return;
-  }
-
-  initPromise = (async () => {
-    kuroshiroInstance = new Kuroshiro();
-    await kuroshiroInstance.init(new KuromojiAnalyzer());
-  })();
-
-  await initPromise;
-}
-
-/**
- * Convert any Japanese text (kanji/katakana/mixed) to hiragana
- */
-export async function convertToHiragana(text: string): Promise<string> {
-  try {
-    await initKuroshiro();
-
-    if (!kuroshiroInstance) {
-      console.error("Kuroshiro not initialized");
-      return text;
-    }
-
-    const result = await kuroshiroInstance.convert(text, {
-      to: "hiragana",
-      mode: "normal",
-    });
-
-    console.log("🔄 漢字→ひらがな変換:", { input: text, output: result });
-
-    return result;
-  } catch (error) {
-    console.error("Kanji to hiragana conversion error:", error);
-    return text; // Return original text if conversion fails
-  }
+export function convertToHiragana(text: string): string {
+  // Use wanakana to convert any katakana to hiragana
+  const result = toHiragana(text);
+  console.log("🔄 カタカナ→ひらがな変換:", { input: text, output: result });
+  return result;
 }
