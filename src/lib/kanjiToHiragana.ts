@@ -27,15 +27,17 @@ export async function initKuroshiro(): Promise<void> {
 
 /**
  * Convert kanji/katakana to hiragana
+ * Non-blocking: Returns original text immediately if not ready
  */
 export async function convertToHiragana(text: string): Promise<string> {
-  // Ensure kuroshiro is initialized
-  if (!isInitialized) {
-    await initKuroshiro();
+  // If not initialized yet, try to initialize but don't wait
+  if (!isInitialized && !isInitializing) {
+    initKuroshiro().catch(() => {}); // Fire and forget
   }
 
-  if (!kuroshiroInstance) {
-    console.warn("⚠️ Kuroshiro未初期化 - 元のテキストを返します");
+  // If still not ready, return original text immediately
+  if (!isInitialized || !kuroshiroInstance) {
+    console.log("⏭️ Kuroshiro未準備 - 元のテキストを使用:", text);
     return text;
   }
 

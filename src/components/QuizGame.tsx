@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
 import { useQuizGame } from "@/hooks/useQuizGame";
-import { initKuroshiro } from "@/lib/kanjiToHiragana";
 import Header from "./Header";
 import GradeSelector from "./GradeSelector";
 import QuizSetup from "./QuizSetup";
@@ -17,12 +15,8 @@ export default function QuizGame() {
   const { state, selectGrade, startQuiz, submitAnswer, dismissFeedback, reset } =
     useQuizGame();
 
-  // Initialize kuroshiro on component mount for voice input
-  useEffect(() => {
-    initKuroshiro().catch((err) => {
-      console.error("Kuroshiro初期化失敗:", err);
-    });
-  }, []);
+  // Don't initialize kuroshiro here - it blocks the UI
+  // Initialize it lazily when voice input is first used
 
   return (
     <div className="min-h-screen bg-amber-50">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { convertToHiragana } from "@/lib/kanjiToHiragana";
+import { convertToHiragana, initKuroshiro } from "@/lib/kanjiToHiragana";
 
 interface UseVoiceInputReturn {
   isSupported: boolean;
@@ -26,6 +26,25 @@ export function useVoiceInput(): UseVoiceInputReturn {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const isSupported = isSpeechRecognitionSupported();
+
+  // Initialize kuroshiro in the background when voice input hook is used
+  // (only runs once, doesn't block UI)
+  useEffect(() => {
+    if (isSupported) {
+      // Use requestIdleCallback if available, otherwise setTimeout
+      const initInBackground = () => {
+        initKuroshiro().catch((err) => {
+          console.warn("Kuroshiro初期化失敗 - 漢字変換なしで動作します:", err);
+        });
+      };
+
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(initInBackground);
+      } else {
+        setTimeout(initInBackground, 1000);
+      }
+    }
+  }, [isSupported]);
 
   useEffect(() => {
     if (!isSupported) return;
