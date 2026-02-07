@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { convertToHiragana } from "@/lib/kanjiToHiragana";
 
 interface UseVoiceInputReturn {
   isSupported: boolean;
@@ -43,16 +44,21 @@ export function useVoiceInput(): UseVoiceInputReturn {
     recognition.maxAlternatives = 1;
 
     // Handle speech recognition result
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = async (event: SpeechRecognitionEvent) => {
       const result = event.results[0];
       if (result.isFinal) {
         const transcriptText = result[0].transcript;
-        console.log('🎤 音声認識結果:', {
+        console.log('🎤 音声認識結果 (変換前):', {
           original: transcriptText,
           confidence: result[0].confidence,
           language: recognition.lang,
         });
-        setTranscript(transcriptText);
+
+        // Convert kanji to hiragana
+        const hiraganaText = await convertToHiragana(transcriptText);
+        console.log('✅ ひらがな変換後:', hiraganaText);
+
+        setTranscript(hiraganaText);
         setError(null);
       }
     };
