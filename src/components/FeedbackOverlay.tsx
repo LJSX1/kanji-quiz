@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { KanjiEntry } from "@/lib/types";
 
 interface FeedbackOverlayProps {
@@ -16,6 +16,8 @@ export default function FeedbackOverlay({
   userAnswer,
   onDismiss,
 }: FeedbackOverlayProps) {
+  const [showAnswer, setShowAnswer] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(onDismiss, 1500);
     return () => clearTimeout(timer);
@@ -41,15 +43,29 @@ export default function FeedbackOverlay({
         </p>
         {!isCorrect && (
           <div className="mt-3 space-y-1">
-            <p className="text-gray-500 text-sm">
-              あなたの答え：<span className="text-red-600 font-bold">{userAnswer}</span>
-            </p>
-            <p className="text-gray-700 text-lg">
-              こたえ：
-              <span className="text-green-700 font-bold">
-                {entry.readings[0]}
-              </span>
-            </p>
+            {!showAnswer ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAnswer(true);
+                }}
+                className="bg-amber-500 text-white font-bold px-6 py-2 rounded-lg hover:bg-amber-600 active:scale-95 transition-all"
+              >
+                こたえを見る
+              </button>
+            ) : (
+              <div className="animate-fade-in space-y-1">
+                <p className="text-gray-500 text-sm">
+                  あなたの答え：<span className="text-red-600 font-bold">{userAnswer}</span>
+                </p>
+                <p className="text-gray-700 text-lg">
+                  こたえ：
+                  <span className="text-green-700 font-bold">
+                    {entry.readings[0]}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
